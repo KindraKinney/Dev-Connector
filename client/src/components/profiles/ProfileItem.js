@@ -1,54 +1,40 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
-import isEmpty from '../../validation/is-empty';
+import React, { Fragment } from 'react'
+import { Link } from 'react-router-dom'
+import PropTypes from 'prop-types'
 
-class ProfileItem extends Component {
-  render() {
-    const { profile } = this.props;
-
-    return (
-      <div className="card card-body bg-light mb-3">
-        <div className="row">
-          <div className="col-2">
-            <img src={profile.user.avatar} alt="" className="rounded-circle" />
-          </div>
-          <div className="col-lg-6 col-md-4 col-8">
-            <h3>{profile.user.name}</h3>
-            <p>
-              {profile.status}{' '}
-              {isEmpty(profile.company) ? null : (
-                <span>at {profile.company}</span>
-              )}
-            </p>
-            <p>
-              {isEmpty(profile.location) ? null : (
-                <span>{profile.location}</span>
-              )}
-            </p>
-            <Link to={`/profile/${profile.handle}`} className="btn btn-info">
-              View Profile
-            </Link>
-          </div>
-          <div className="col-md-4 d-none d-md-block">
-            <h4>Skill Set</h4>
-            <ul className="list-group">
-              {profile.skills.slice(0, 4).map((skill, index) => (
-                <li key={index} className="list-group-item">
-                  <i className="fa fa-check pr-1" />
-                  {skill}
-                </li>
-              ))}
-            </ul>
-          </div>
+const ProfileItem = ({ profile }) => {
+  return (
+    <Fragment>
+      <div className='profile bg-light'>
+        <img className='round-img' src={profile.user.avatar} alt='' />
+        <div>
+          <h2>{profile.user.name}</h2>
+          <p>
+            {profile.status}{' '}
+            {profile.company && <span> at {profile.company}</span>}
+          </p>
+          <p className='my-1'>
+            {profile.location && <span>{profile.location}</span>}
+          </p>
+          <Link to={`/profile/${profile.user._id}`} className='btn btn-primary'>
+            View Profile
+          </Link>
         </div>
+
+        <ul>
+          {profile.skills.slice(0, 4).map((skill, index) => (
+            <li key={index} className='text-primary'>
+              <i className='fas fa-check'></i> {skill}
+            </li>
+          ))}
+        </ul>
       </div>
-    );
-  }
+    </Fragment>
+  )
 }
 
 ProfileItem.propTypes = {
   profile: PropTypes.object.isRequired
-};
+}
 
-export default ProfileItem;
+export default ProfileItem

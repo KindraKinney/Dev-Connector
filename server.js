@@ -1,34 +1,30 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const users = require('./routes/api/users');
-const profile = require('./routes/api/profile');
-const posts = require('./routes/api/posts');
+const express = require('express')
+const path = require('path')
+require('./db/db')
 
-const app = express();
+const app = express()
 
-// Body parser middleware 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+// Init middleware
+app.use(express.json({ extended: false }))
 
-// DB Config
-const db = require('./config/keys').mongoURI;
+// Load Routes
+app.use(require('./routes/api/userRoute'))
+app.use(require('./routes/api/authRoute'))
+app.use(require('./routes/api/profileRoute'))
+app.use(require('./routes/api/postRoute'))
 
-// Connect to MongoDB
-mongoose
-  .connect(db, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true })
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  app.use(express.static('client/build'))
 
-app.get('/', (req, res) => res.send('Hello'));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'))
+  })
+}
 
-// Use Routes
-app.use('/api/users', users);
-app.use('/api/profile', profile);
-app.use('/api/posts', posts);
+const port = process.env.PORT || 5000
 
-const port = process.env.PORT || 5000;
-
-app.listen(port, () => console.log(`Server running on port ${port}`));
+app.listen(port, () => {
+  console.log(`Server is up on port ${port}`)
+})

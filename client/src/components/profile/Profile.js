@@ -1,76 +1,89 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
-import ProfileHeader from './ProfileHeader';
-import ProfileAbout from './ProfileAbout';
-import ProfileCreds from './ProfileCreds';
-import ProfileGithub from './ProfileGithub';
-import Spinner from '../common/Spinner';
-import { getProfileByHandle } from '../../actions/profileActions';
+import React, { useEffect, Fragment } from 'react'
+import { Link } from 'react-router-dom'
+import { connect } from 'react-redux'
+import { getProfileById } from '../../actions/profile'
+import PropTypes from 'prop-types'
+import Spinner from '../layout/Spinner'
+import ProfileTop from './ProfileTop'
+import ProfileAbout from './ProfileAbout'
+import ProfileExperience from './ProfileExperience'
+import ProfileEducation from './ProfileEducation'
+import ProfileGithub from './ProfileGithub'
 
-class Profile extends Component {
-  componentDidMount() {
-    if (this.props.match.params.handle) {
-      this.props.getProfileByHandle(this.props.match.params.handle);
-    }
-  }
+const Profile = ({
+  match,
+  profile: { profile, loading },
+  auth,
+  getProfileById
+}) => {
+  useEffect(() => {
+    getProfileById(match.params.id)
+  }, [getProfileById, match.params.id])
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.profile.profile === null && this.props.profile.loading) {
-      this.props.history.push('/not-found');
-    }
-  }
+  return profile === null || loading ? (
+    <Spinner />
+  ) : (
+    <Fragment>
+      <Link to='/profiles' className='btn btn-light'>
+        Back To Profiles
+      </Link>
+      {auth.isAuthenticated &&
+        auth.loading === false &&
+        auth.user._id === profile.user._id && (
+          <Link to='/edit-profile' className='btn btn-dark'>
+            Edit Profile
+          </Link>
+        )}
 
-  render() {
-    const { profile, loading } = this.props.profile;
-    let profileContent;
+      <div className='profile-grid my-1'>
+        {/* Top */}
+        <ProfileTop profile={profile} />
 
-    if (profile === null || loading) {
-      profileContent = <Spinner />;
-    } else {
-      profileContent = (
-        <div>
-          <div className="row">
-            <div className="col-md-6">
-              <Link to="/profiles" className="btn btn-light mb-3 float-left">
-                Back To Profiles
-              </Link>
-            </div>
-            <div className="col-md-6" />
-          </div>
-          <ProfileHeader profile={profile} />
-          <ProfileAbout profile={profile} />
-          <ProfileCreds
-            education={profile.education}
-            experience={profile.experience}
-          />
-          {profile.githubusername ? (
-            <ProfileGithub username={profile.githubusername} />
-          ) : null}
+        {/* About */}
+        <ProfileAbout profile={profile} />
+
+        {/* Experience */}
+        <div className='profile-exp bg-white p-2'>
+          <h2 className='text-primary'>Experience</h2>
+          {profile.experience.length > 0 ? (
+            profile.experience.map(experience => (
+              <ProfileExperience key={experience._id} experience={experience} />
+            ))
+          ) : (
+            <h4>No Experience Credentials</h4>
+          )}
         </div>
-      );
-    }
 
-    return (
-      <div className="profile">
-        <div className="container">
-          <div className="row">
-            <div className="col-md-12">{profileContent}</div>
-          </div>
+        {/* Education */}
+        <div className='profile-edu bg-white p-2'>
+          <h2 className='text-primary'>Education</h2>
+          {profile.education.length > 0 ? (
+            profile.education.map(education => (
+              <ProfileEducation key={education._id} education={education} />
+            ))
+          ) : (
+            <h4>No Education Credentials</h4>
+          )}
         </div>
+
+        {/* Github */}
+        {profile.githubusername && (
+          <ProfileGithub username={profile.githubusername} />
+        )}
       </div>
-    );
-  }
+    </Fragment>
+  )
 }
 
 Profile.propTypes = {
-  getProfileByHandle: PropTypes.func.isRequired,
-  profile: PropTypes.object.isRequired
-};
+  profile: PropTypes.object.isRequired,
+  getProfileById: PropTypes.func.isRequired,
+  auth: PropTypes.object.isRequired
+}
 
 const mapStateToProps = state => ({
-  profile: state.profile
-});
+  profile: state.profile,
+  auth: state.auth
+})
 
-export default connect(mapStateToProps, { getProfileByHandle })(Profile);
+export default connect(mapStateToProps, { getProfileById })(Profile)
